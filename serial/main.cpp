@@ -130,8 +130,9 @@ Dataset normalize(Dataset data)
 float calcDot(Features features, Features weights)
 {
     float result = 0;
-    for (int i=0; i<features.size(); i++)
+    for (int i=0; i<features.size() - 1; i++)
         result += features[i] * weights[i];
+    result += weights[weights.size()-1];
     return result;
 }
 
