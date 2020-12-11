@@ -29,6 +29,25 @@ int checkInput(int argc)
     return 0;
 }
 
+Records readCSV(string filename)
+{
+    string line;
+    Records records;
+    ifstream dataframe(filename);
+    if(dataframe.is_open())
+    {
+        if(dataframe.peek() == ifstream::traits_type::eof())
+            return records;
+        while(getline(dataframe,line))
+            if(line != "")
+                records.push_back(line);
+        if(records.size() > 0)
+            records.erase(records.begin());
+        dataframe.close();
+    }
+    return records;
+}
+
 int main(int argc , char* argv[])
 {
     if(checkInput(argc) < 0)
