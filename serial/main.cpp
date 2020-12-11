@@ -20,6 +20,7 @@ typedef std::vector<std::string> Words;
 typedef std::vector<float> Features;
 typedef std::vector<float> Extermums;
 typedef std::vector<std::vector<float>> Dataset;
+typedef std::vector<int> Predictions;
 
 int checkInput(int argc)
 {
@@ -126,6 +127,41 @@ Dataset normalize(Dataset data)
     return data;
 }
 
+float calcDot(Features features, Features weights)
+{
+    float result = 0;
+    for (int i=0; i<features.size(); i++)
+        result += features[i] * weights[i];
+    return result;
+}
+
+int findPriceRange(Features features, Dataset weights_dataset)
+{
+    float result = 0;
+    int range = 0;
+    std::vector<float> prices;
+    for (int i=0; i<weights_dataset.size(); i++)
+        prices.push_back(calcDot(features,weights_dataset[i]));
+    result = prices[0];
+    for (int i=0; i<prices.size(); i++)
+    {
+        if(result < prices[i])
+        {
+            result = prices[i];
+            range = i;
+        }
+    }
+    return range;
+}
+
+Predictions classifyPhones(Dataset data,Dataset weights_dataset)
+{
+    Predictions predicts;
+    for (int i=0; i<data.size(); i++)
+        predicts.push_back(findPriceRange(data[i],weights_dataset));
+    return predicts;
+}
+
 int main(int argc , char* argv[])
 {
     if(checkInput(argc) < 0)
@@ -144,6 +180,7 @@ int main(int argc , char* argv[])
     Dataset weights_dataset = createDataset(weights);
 
     phones_dataset = normalize(phones_dataset);
+    Predictions prices = classifyPhones(phones_dataset,weights_dataset);
 
     return 0;
 }
