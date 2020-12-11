@@ -162,6 +162,15 @@ Predictions classifyPhones(Dataset data,Dataset weights_dataset)
     return predicts;
 }
 
+float calcAccuracy(Predictions predicts,Dataset data)
+{
+    int result = 0;
+    for (int i=0; i<predicts.size(); i++)
+        if (predicts[i] == data[i][data[i].size() - 1])
+            result++;
+    return ((float)result / (float)predicts.size()) * 100;
+}
+
 int main(int argc , char* argv[])
 {
     if(checkInput(argc) < 0)
@@ -181,6 +190,8 @@ int main(int argc , char* argv[])
 
     phones_dataset = normalize(phones_dataset);
     Predictions prices = classifyPhones(phones_dataset,weights_dataset);
+    float a = calcAccuracy(prices,phones_dataset);
+    cout<<"Accuracy: "<<setprecision(4)<<a<<'%';
 
     return 0;
 }
