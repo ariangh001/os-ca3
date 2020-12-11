@@ -18,6 +18,7 @@ typedef std::string Record;
 typedef std::vector<std::string> Records;
 typedef std::vector<std::string> Words;
 typedef std::vector<float> Features;
+typedef std::vector<float> Extermums;
 typedef std::vector<std::vector<float>> Dataset;
 
 int checkInput(int argc)
@@ -86,6 +87,44 @@ Dataset createDataset(Records records)
     return dataset;
 }
 
+Extermums findMax(Dataset data)
+{
+    Extermums max_values;
+    for (int i=0; i<data[0].size() - 1; i++)
+    {
+        float max = -1;
+        for (int j=0; j<data.size(); j++)
+            if(max < data[j][i])
+                max = data[j][i];
+        max_values.push_back(max);
+    }
+    return max_values;
+}
+
+Extermums findMin(Dataset data)
+{
+    Extermums min_values;
+    for (int i=0; i<data[0].size() -1; i++)
+    {
+        float min = data[0][i];
+        for (int j=0; j<data.size(); j++)
+            if(min > data[j][i])
+                min = data[j][i];
+        min_values.push_back(min);
+    }
+    return min_values;
+}
+
+Dataset normalize(Dataset data)
+{
+    Extermums min_values = findMin(data);
+    Extermums max_values = findMax(data);
+
+    for (int i=0; i<data.size(); i++)
+        for (int j=0; j<data[i].size() - 1; j++)
+            data[i][j] = (float)(data[i][j] - min_values[j]) / (float)(max_values[j] - min_values[j]);
+    return data;
+}
 
 int main(int argc , char* argv[])
 {
@@ -103,6 +142,8 @@ int main(int argc , char* argv[])
 
     Dataset phones_dataset = createDataset(phones);
     Dataset weights_dataset = createDataset(weights);
+
+    phones_dataset = normalize(phones_dataset);
 
     return 0;
 }
