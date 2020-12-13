@@ -39,6 +39,53 @@ int checkInput(int argc)
     return 0;
 }
 
+Words parseString(string str, char delimiter)
+{
+    Words words;
+    string tmp = "";
+    for (auto x : str)
+    {
+        if(x == delimiter)
+        {
+            words.push_back(tmp);
+            tmp = "";
+        }
+        else
+        {
+            tmp += x;
+        }
+    }
+    words.push_back(tmp);
+    return words;
+}
+
+Records readCSV(string filename)
+{
+    string line;
+    Records records;
+    ifstream dataframe(filename);
+    if(dataframe.is_open())
+    {
+        if(dataframe.peek() == ifstream::traits_type::eof())
+            return records;
+        while(getline(dataframe,line))
+            if(line != "")
+                records.push_back(line);
+        if(records.size() > 0)
+            records.erase(records.begin());
+        dataframe.close();
+    }
+    return records;
+}
+
+Features changeType(Record record)
+{
+    Features features;
+    Words words = parseString(record,COMMA);
+    for (int j=0; j<words.size(); j++)
+        features.push_back(stof(words[j]));
+    return features;
+}
 
 
 int main(int argc , char* argv[])
