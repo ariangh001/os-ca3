@@ -38,6 +38,7 @@ Records weights;
 int summation = 0;
 pthread_mutex_t mutex_sum;
 
+
 int checkInput(int argc)
 {
     if(argc != INPUT_LEN)
@@ -132,11 +133,8 @@ Extermums findMin(Dataset data)
     return min_values;
 }
 
-Dataset normalize(Dataset data)
+Dataset normalize(Dataset data,Extermums min_values,Extermums max_values)
 {
-    Extermums min_values = findMin(data);
-    Extermums max_values = findMax(data);
-
     for (int i=0; i<data.size(); i++)
         for (int j=0; j<data[i].size() - 1; j++)
             data[i][j] = (float)(data[i][j] - min_values[j]) / (float)(max_values[j] - min_values[j]);
@@ -185,7 +183,7 @@ float calcAccuracy(Predictions predicts,Dataset data)
     for (int i=0; i<predicts.size(); i++)
         if (predicts[i] == data[i][data[i].size() - 1])
             result++;
-    return ((float)result / (float)predicts.size()) * 100;
+    return result;
 }
 
 Extermums minLists(Extermums main, Extermums local)
@@ -231,13 +229,26 @@ void* preprocess(void* args)
     pthread_mutex_unlock(&mutex_sum);
 }
 
+void* regression(void* args)
+{
+    long offset = (long)args;
+    int range = train_set.size() / NUMBER_OF_THREADS;
+    Dataset::const_iterator first = train_set.begin() + (offset * range);
+    Dataset::const_iterator last = first + range;
+    Dataset local_set(first,last);
+    local_set = normalize(local_set,minimums,maximums);
+    Predictions prices = classifyPhones(local_set,weights_dataset);
+    summation += calcAccuracy(prices,local_set);
+}
+
 int main(int argc , char* argv[])
 {
     if(checkInput(argc) < 0)
         return -1;
 
     pthread_t threads[NUMBER_OF_THREADS];
-    //Serial
+
+    // Serial
     string main_dir(argv[1]);
     dataset_dir = main_dir;
     weights_dir = main_dir;
@@ -260,11 +271,22 @@ int main(int argc , char* argv[])
     }
     for(int i = 0; i < NUMBER_OF_THREADS; i++)
 		pthread_join(threads[i], &status);
-    //Serial
-    train_set = normalize(train_set);
-    Predictions prices = classifyPhones(train_set,weights_dataset);
-    float a = calcAccuracy(prices,train_set);
-    cout<<"Accuracy: "<<setprecision(4)<<a<<'%';
 
+    for (int i=0; i<NUMBER_OF_THREADS; i++)
+    {
+        int return_code = pthread_create(&threads[i],
+				NULL, regression, (void*)i);
+        if (return_code)
+		{
+			cout<<"Error in Creating Thread "<<i<<endl;
+			exit(-1);
+		}
+    }
+    for(int i = 0; i < NUMBER_OF_THREADS; i++)
+		pthread_join(threads[i], &status);
+
+    result = ((float)summation/(float)train_set.size()) * 100;
+    cout<<setprecision(4)<<result<<'%'<<endl;
+    pthread_exit(NULL);
     return 0;
 }
