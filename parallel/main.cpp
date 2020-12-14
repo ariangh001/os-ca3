@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include <time.h>
 
-#define NUMBER_OF_THREADS 4
+#define NUMBER_OF_THREADS 10
 #define INPUT_LEN 2
 #define COMMA ','
 #define DATASET_FILE "/train.csv"
